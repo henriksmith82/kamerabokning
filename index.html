@@ -129,6 +129,17 @@
             border-radius: 5px;
             border: 1px solid #ddd;
         }
+        .debug-log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +153,10 @@
         
         <div class="camera-list" id="camera-list">
             <!-- Kameror kommer att läggas till här med JavaScript -->
+        </div>
+        
+        <div class="debug-log" id="debug-log">
+            <!-- Debug-meddelanden kommer att visas här -->
         </div>
     </div>
 
@@ -170,6 +185,14 @@
     </div>
 
     <script>
+        // För att logga meddelanden och felsöka
+        function logDebug(message) {
+            const debugLog = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
         // Standardlista med kameror (används om det inte finns data i localStorage)
         const defaultCameras = [
             { id: 1, name: "Canon EOS 5D", available: true, description: "Professionell DSLR-kamera med full-frame sensor." },
@@ -186,19 +209,31 @@
 
         // Hämta kameror från localStorage eller använd standardlistan
         function getCameras() {
-            const savedCameras = localStorage.getItem('cameras');
-            if (savedCameras) {
-                return JSON.parse(savedCameras);
-            } else {
-                // Om det inte finns någon sparad data, använd standardlistan och spara den
-                saveCameras(defaultCameras);
+            try {
+                const savedCameras = localStorage.getItem('cameras');
+                if (savedCameras) {
+                    logDebug("Hämtar sparade kameror från localStorage");
+                    return JSON.parse(savedCameras);
+                } else {
+                    logDebug("Ingen sparad data, använder standardlistan");
+                    // Om det inte finns någon sparad data, använd standardlistan och spara den
+                    saveCameras(defaultCameras);
+                    return defaultCameras;
+                }
+            } catch (error) {
+                logDebug("Fel vid hämtning av kameror: " + error.message);
                 return defaultCameras;
             }
         }
 
         // Spara kameror till localStorage
         function saveCameras(cameras) {
-            localStorage.setItem('cameras', JSON.stringify(cameras));
+            try {
+                localStorage.setItem('cameras', JSON.stringify(cameras));
+                logDebug("Kameror sparade till localStorage");
+            } catch (error) {
+                logDebug("Fel vid sparande av kameror: " + error.message);
+            }
         }
 
         // Visa alla kameror på sidan
@@ -206,6 +241,8 @@
             const cameras = getCameras();
             const cameraList = document.getElementById('camera-list');
             cameraList.innerHTML = ''; // Rensa befintligt innehåll
+            
+            logDebug(`Visar ${cameras.length} kameror`);
             
             cameras.forEach(camera => {
                 const cameraElement = document.createElement('div');
@@ -244,12 +281,18 @@
 
         // Formatera datum till läsbart format
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return `${date.getDate()}/${date.getMonth() + 1}`;
+            try {
+                const date = new Date(dateString);
+                return `${date.getDate()}/${date.getMonth() + 1}`;
+            } catch (error) {
+                logDebug("Fel vid formatering av datum: " + error.message);
+                return dateString;
+            }
         }
 
         // Öppna bokningsformuläret
         function openBookingForm(cameraId) {
+            logDebug(`Öppnar bokningsformulär för kamera ID: ${cameraId}`);
             document.getElementById('camera-id').value = cameraId;
             document.getElementById('booking-form').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
@@ -258,27 +301,40 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('start-date').min = today;
             document.getElementById('end-date').min = today;
+            
+            // Förifyll med dagens datum
+            document.getElementById('start-date').value = today;
+            
+            // Sätt slutdatum till en dag senare som standard
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('end-date').value = tomorrow.toISOString().split('T')[0];
         }
 
         // Stäng bokningsformuläret
         function closeBookingForm() {
+            logDebug("Stänger bokningsformuläret");
             document.getElementById('booking-form').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('book-camera-form').reset();
         }
 
         // Hantera bokningsformuläret
-        document.getElementById('book-camera-form').addEventListener('submit', function(e) {
+        function handleBookFormSubmit(e) {
             e.preventDefault();
+            logDebug("Formulär inskickat, hanterar bokningen");
             
             const cameraId = parseInt(document.getElementById('camera-id').value);
             const bookerName = document.getElementById('booker-name').value;
             const startDate = document.getElementById('start-date').value;
             const endDate = document.getElementById('end-date').value;
             
+            logDebug(`Bokningsdetaljer: Kamera ID ${cameraId}, Namn: ${bookerName}, Datum: ${startDate} till ${endDate}`);
+            
             // Kontrollera att slutdatum är efter startdatum
             if (new Date(endDate) <= new Date(startDate)) {
                 alert('Slutdatumet måste vara efter startdatumet');
+                logDebug("Fel: Slutdatum måste vara efter startdatum");
                 return;
             }
             
@@ -287,33 +343,49 @@
             
             // Hitta kameran och uppdatera dess status
             const camera = cameras.find(c => c.id === cameraId);
-            if (camera && camera.available) {
-                camera.available = false;
-                camera.bookedBy = bookerName;
-                camera.startDate = startDate;
-                camera.endDate = endDate;
+            
+            if (camera) {
+                logDebug(`Hittade kamera: ${camera.name}, Tillgänglig: ${camera.available}`);
                 
-                // Spara uppdaterad data
-                saveCameras(cameras);
-                
-                // Uppdatera visningen
-                displayCameras();
-                closeBookingForm();
-                
-                // Visa bekräftelse
-                alert(`Du har bokat ${camera.name} från ${formatDate(startDate)} till ${formatDate(endDate)}`);
+                if (camera.available) {
+                    camera.available = false;
+                    camera.bookedBy = bookerName;
+                    camera.startDate = startDate;
+                    camera.endDate = endDate;
+                    
+                    // Spara uppdaterad data
+                    saveCameras(cameras);
+                    
+                    // Uppdatera visningen
+                    displayCameras();
+                    closeBookingForm();
+                    
+                    // Visa bekräftelse
+                    alert(`Du har bokat ${camera.name} från ${formatDate(startDate)} till ${formatDate(endDate)}`);
+                    logDebug(`Bokning bekräftad för ${camera.name}`);
+                } else {
+                    alert('Denna kamera är tyvärr inte längre tillgänglig');
+                    logDebug("Fel: Kameran är inte längre tillgänglig");
+                }
+            } else {
+                alert('Kunde inte hitta den valda kameran');
+                logDebug(`Fel: Kunde inte hitta kamera med ID ${cameraId}`);
             }
-        });
+        }
         
         // Funktion för att lämna tillbaka en kamera
         function returnCamera(cameraId) {
             if (confirm('Är du säker på att du vill lämna tillbaka denna kamera?')) {
+                logDebug(`Försöker lämna tillbaka kamera ID: ${cameraId}`);
+                
                 // Hämta aktuella kameror
                 const cameras = getCameras();
                 
                 // Hitta kameran och uppdatera dess status
                 const camera = cameras.find(c => c.id === cameraId);
+                
                 if (camera && !camera.available) {
+                    logDebug(`Återlämnar kamera: ${camera.name}`);
                     camera.available = true;
                     // Ta bort bokningsinformation
                     delete camera.bookedBy;
@@ -335,8 +407,25 @@
         // Återställ all data till standardinställningar (för demo)
         function resetAllData() {
             if (confirm('Detta kommer att återställa all bokningsdata. Är du säker?')) {
+                logDebug("Återställer all data till standardinställningar");
                 saveCameras(defaultCameras);
                 displayCameras();
                 alert('All data har återställts till standardinställningar.');
             }
         }
+
+        // Initialisera sidan
+        window.onload = function() {
+            logDebug("Sidan laddas, initialiserar...");
+            
+            // Visa kamerorna
+            displayCameras();
+            
+            // Lägg till eventlistener för formuläret
+            document.getElementById('book-camera-form').addEventListener('submit', handleBookFormSubmit);
+            
+            logDebug("Initialisering klar");
+        };
+    </script>
+</body>
+</html>
