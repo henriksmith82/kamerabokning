@@ -10,19 +10,48 @@
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: #f5f5f5;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background: white;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
-            color: #333;
             text-align: center;
+            color: #333;
+        }
+        .login-section {
+            max-width: 400px;
+            margin: 0 auto 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .login-section button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .login-section button:hover {
+            background-color: #45a049;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
         .camera-list {
             display: grid;
@@ -32,14 +61,16 @@
         }
         .camera {
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 15px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .camera h3 {
             margin-top: 0;
-            color: #444;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
         }
         .available {
             color: green;
@@ -65,366 +96,441 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        .booking-form {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
-            z-index: 1000;
-            width: 300px;
-        }
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
+        #user-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9f7ef;
             border-radius: 4px;
+            text-align: center;
         }
-        .form-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .cancel-btn {
-            background-color: #f44336;
-        }
-        .cancel-btn:hover {
-            background-color: #d32f2f;
-        }
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-        }
-        .return-btn {
-            background-color: #2196F3;
-        }
-        .return-btn:hover {
-            background-color: #0b7dda;
-        }
-        .admin-panel {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f8f8f8;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        .debug-log {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 150px;
-            overflow-y: auto;
+        #booking-form {
+            display: none;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Kamerabokningssystem</h1>
-        <p>Välkommen till skolans kamerabokningssystem. Här kan du se tillgängliga kameror och boka dem.</p>
         
-        <div class="admin-panel">
-            <button onclick="resetAllData()" class="cancel-btn">Återställ all data (för demo)</button>
+        <!-- Visas när användaren är inloggad -->
+        <div id="user-info" style="display: none;">
+            <h3>Välkommen <span id="user-name"></span></h3>
+            <button id="logout-btn">Logga ut</button>
         </div>
         
-        <div class="camera-list" id="camera-list">
-            <!-- Kameror kommer att läggas till här med JavaScript -->
-        </div>
-        
-        <div class="debug-log" id="debug-log">
-            <!-- Debug-meddelanden kommer att visas här -->
-        </div>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-    <div class="booking-form" id="booking-form">
-        <h2>Boka kamera</h2>
-        <form id="book-camera-form">
-            <input type="hidden" id="camera-id">
-            <div class="form-group">
-                <label for="booker-name">Ditt namn:</label>
-                <input type="text" id="booker-name" required>
+        <!-- Inloggningsformulär -->
+        <div id="login-section" class="login-section">
+            <h2>Logga in för att boka kameror</h2>
+            <div id="login-form">
+                <input type="email" id="email" placeholder="E-postadress">
+                <input type="password" id="password" placeholder="Lösenord">
+                <button id="login-btn">Logga in</button>
+                <button id="register-btn">Registrera nytt konto</button>
             </div>
-            <div class="form-group">
+        </div>
+        
+        <!-- Bokningsformulär -->
+        <div id="booking-form">
+            <h2>Boka kamera</h2>
+            <input type="hidden" id="camera-id">
+            <div>
                 <label for="start-date">Startdatum:</label>
                 <input type="date" id="start-date" required>
             </div>
-            <div class="form-group">
+            <div>
                 <label for="end-date">Slutdatum:</label>
                 <input type="date" id="end-date" required>
             </div>
-            <div class="form-buttons">
-                <button type="button" class="cancel-btn" onclick="closeBookingForm()">Avbryt</button>
-                <button type="submit">Boka</button>
+            <div>
+                <button id="book-btn">Boka</button>
+                <button id="cancel-booking-btn">Avbryt</button>
             </div>
-        </form>
+        </div>
+        
+        <h2>Tillgängliga kameror</h2>
+        <div id="camera-list" class="camera-list">
+            <!-- Kameror kommer att läggas till här med JavaScript -->
+            <p>Laddar kameror...</p>
+        </div>
     </div>
 
+    <!-- Firebase-skript -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        // För att logga meddelanden och felsöka
-        function logDebug(message) {
-            const debugLog = document.getElementById('debug-log');
-            const timestamp = new Date().toLocaleTimeString();
-            debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-            debugLog.scrollTop = debugLog.scrollHeight;
-        }
+        // ===============================================
+        // STEG 1: ERSÄTT DETTA MED DIN FIREBASE-KONFIGURATION
+        // ===============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAY7R1kpTXNwyVp0CjpzyqgLISY8_6JVJk",
+            authDomain: "isgyjos-967af.firebaseapp.com",
+            projectId: "isgyjos-967af",
+            storageBucket: "isgyjos-967af.firebasestorage.app",
+            messagingSenderId: "255676199637",
+            appId: "1:255676199637:web:cb35dbb0a28acc7b8ca85c"
+            measurementId: "G-19RM2ZCD96"
+        };
         
-        // Standardlista med kameror (används om det inte finns data i localStorage)
-        const defaultCameras = [
-            { id: 1, name: "Canon EOS 5D", available: true, description: "Professionell DSLR-kamera med full-frame sensor." },
-            { id: 2, name: "Sony Alpha A7III", available: false, bookedBy: "Erik Svensson", startDate: "2025-03-27", endDate: "2025-03-29", description: "Spegellös systemkamera med utmärkt bildkvalitet." },
-            { id: 3, name: "Nikon Z6", available: true, description: "Spegellös kamera med bra videofunktionalitet." },
-            { id: 4, name: "Panasonic Lumix GH5", available: true, description: "Utmärkt för videoproduktion med 4K-inspelning." },
-            { id: 5, name: "Fujifilm X-T4", available: true, description: "Kompakt systemkamera med retrostil och bra bildkvalitet." },
-            { id: 6, name: "Blackmagic Pocket Cinema 6K", available: false, bookedBy: "Anna Lindström", startDate: "2025-03-26", endDate: "2025-03-28", description: "Professionell filmkamera med 6K-upplösning." },
-            { id: 7, name: "Canon EOS R5", available: true, description: "Högupplöst spegellös kamera med 8K-video." },
-            { id: 8, name: "Sony FX3", available: true, description: "Kompakt filmkamera från Sony med full-frame sensor." },
-            { id: 9, name: "GoPro Hero 10", available: false, bookedBy: "Markus Berg", startDate: "2025-03-25", endDate: "2025-03-30", description: "Actionkamera för äventyrlig fotografering." },
-            { id: 10, name: "DJI Pocket 2", available: true, description: "Liten kamera med inbyggd gimbal för stabiliserad video." }
-        ];
-
-        // Hämta kameror från localStorage eller använd standardlistan
-        function getCameras() {
-            try {
-                const savedCameras = localStorage.getItem('cameras');
-                if (savedCameras) {
-                    logDebug("Hämtar sparade kameror från localStorage");
-                    return JSON.parse(savedCameras);
-                } else {
-                    logDebug("Ingen sparad data, använder standardlistan");
-                    // Om det inte finns någon sparad data, använd standardlistan och spara den
-                    saveCameras(defaultCameras);
-                    return defaultCameras;
-                }
-            } catch (error) {
-                logDebug("Fel vid hämtning av kameror: " + error.message);
-                return defaultCameras;
-            }
-        }
-
-        // Spara kameror till localStorage
-        function saveCameras(cameras) {
-            try {
-                localStorage.setItem('cameras', JSON.stringify(cameras));
-                logDebug("Kameror sparade till localStorage");
-            } catch (error) {
-                logDebug("Fel vid sparande av kameror: " + error.message);
-            }
-        }
-
-        // Visa alla kameror på sidan
-        function displayCameras() {
-            const cameras = getCameras();
-            const cameraList = document.getElementById('camera-list');
-            cameraList.innerHTML = ''; // Rensa befintligt innehåll
+        // Initiera Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Skapa referenser till Firebase-tjänster
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // ===============================================
+        // DOM-element
+        // ===============================================
+        const userInfoElement = document.getElementById('user-info');
+        const userNameElement = document.getElementById('user-name');
+        const loginSectionElement = document.getElementById('login-section');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const cameraListElement = document.getElementById('camera-list');
+        const bookingFormElement = document.getElementById('booking-form');
+        const cameraIdInput = document.getElementById('camera-id');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const bookBtn = document.getElementById('book-btn');
+        const cancelBookingBtn = document.getElementById('cancel-booking-btn');
+        
+        // ===============================================
+        // Autentiseringsfunktioner
+        // ===============================================
+        
+        // Registrera en ny användare
+        registerBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
             
-            logDebug(`Visar ${cameras.length} kameror`);
-            
-            cameras.forEach(camera => {
-                const cameraElement = document.createElement('div');
-                cameraElement.className = 'camera';
-                
-                let statusHTML = '';
-                let actionButtons = '';
-                
-                if (camera.available) {
-                    statusHTML = `<p>Status: <span class="available">Tillgänglig</span></p>`;
-                    actionButtons = `<button onclick="openBookingForm(${camera.id})">Boka kamera</button>`;
-                } else {
-                    statusHTML = `
-                        <p>Status: <span class="booked">Bokad</span></p>
-                        <p>Bokad av: ${camera.bookedBy}</p>
-                        <p>Datum: ${formatDate(camera.startDate)} - ${formatDate(camera.endDate)}</p>
-                    `;
-                    actionButtons = `
-                        <div class="action-buttons">
-                            <button disabled>Boka kamera</button>
-                            <button class="return-btn" onclick="returnCamera(${camera.id})">Lämna tillbaka</button>
-                        </div>
-                    `;
-                }
-                
-                cameraElement.innerHTML = `
-                    <h3>${camera.name}</h3>
-                    ${statusHTML}
-                    <p>Beskrivning: ${camera.description}</p>
-                    ${actionButtons}
-                `;
-                
-                cameraList.appendChild(cameraElement);
-            });
-        }
-
-        // Formatera datum till läsbart format
-        function formatDate(dateString) {
-            try {
-                const date = new Date(dateString);
-                return `${date.getDate()}/${date.getMonth() + 1}`;
-            } catch (error) {
-                logDebug("Fel vid formatering av datum: " + error.message);
-                return dateString;
-            }
-        }
-
-        // Öppna bokningsformuläret
-        function openBookingForm(cameraId) {
-            logDebug(`Öppnar bokningsformulär för kamera ID: ${cameraId}`);
-            document.getElementById('camera-id').value = cameraId;
-            document.getElementById('booking-form').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-            
-            // Sätt minimidatum till idag
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('start-date').min = today;
-            document.getElementById('end-date').min = today;
-            
-            // Förifyll med dagens datum
-            document.getElementById('start-date').value = today;
-            
-            // Sätt slutdatum till en dag senare som standard
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('end-date').value = tomorrow.toISOString().split('T')[0];
-        }
-
-        // Stäng bokningsformuläret
-        function closeBookingForm() {
-            logDebug("Stänger bokningsformuläret");
-            document.getElementById('booking-form').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('book-camera-form').reset();
-        }
-
-        // Hantera bokningsformuläret
-        function handleBookFormSubmit(e) {
-            e.preventDefault();
-            logDebug("Formulär inskickat, hanterar bokningen");
-            
-            const cameraId = parseInt(document.getElementById('camera-id').value);
-            const bookerName = document.getElementById('booker-name').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
-            
-            logDebug(`Bokningsdetaljer: Kamera ID ${cameraId}, Namn: ${bookerName}, Datum: ${startDate} till ${endDate}`);
-            
-            // Kontrollera att slutdatum är efter startdatum
-            if (new Date(endDate) <= new Date(startDate)) {
-                alert('Slutdatumet måste vara efter startdatumet');
-                logDebug("Fel: Slutdatum måste vara efter startdatum");
+            if (!email || !password) {
+                alert('Du måste ange e-post och lösenord');
                 return;
             }
             
-            // Hämta aktuella kameror
-            const cameras = getCameras();
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                alert('Konto skapat! Du är nu inloggad.');
+            } catch (error) {
+                alert('Kunde inte skapa konto: ' + error.message);
+            }
+        });
+        
+        // Logga in med existerande konto
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
             
-            // Hitta kameran och uppdatera dess status
-            const camera = cameras.find(c => c.id === cameraId);
+            if (!email || !password) {
+                alert('Du måste ange e-post och lösenord');
+                return;
+            }
             
-            if (camera) {
-                logDebug(`Hittade kamera: ${camera.name}, Tillgänglig: ${camera.available}`);
-                
-                if (camera.available) {
-                    camera.available = false;
-                    camera.bookedBy = bookerName;
-                    camera.startDate = startDate;
-                    camera.endDate = endDate;
-                    
-                    // Spara uppdaterad data
-                    saveCameras(cameras);
-                    
-                    // Uppdatera visningen
-                    displayCameras();
-                    closeBookingForm();
-                    
-                    // Visa bekräftelse
-                    alert(`Du har bokat ${camera.name} från ${formatDate(startDate)} till ${formatDate(endDate)}`);
-                    logDebug(`Bokning bekräftad för ${camera.name}`);
-                } else {
-                    alert('Denna kamera är tyvärr inte längre tillgänglig');
-                    logDebug("Fel: Kameran är inte längre tillgänglig");
-                }
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                alert('Du är nu inloggad!');
+            } catch (error) {
+                alert('Kunde inte logga in: ' + error.message);
+            }
+        });
+        
+        // Logga ut
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                alert('Du har loggats ut');
+            } catch (error) {
+                alert('Kunde inte logga ut: ' + error.message);
+            }
+        });
+        
+        // Lyssna på ändringar i autentiseringsstatus
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Användaren är inloggad
+                userNameElement.textContent = user.email;
+                userInfoElement.style.display = 'block';
+                loginSectionElement.style.display = 'none';
             } else {
-                alert('Kunde inte hitta den valda kameran');
-                logDebug(`Fel: Kunde inte hitta kamera med ID ${cameraId}`);
+                // Användaren är utloggad
+                userInfoElement.style.display = 'none';
+                loginSectionElement.style.display = 'block';
+            }
+            
+            // Ladda kameror oavsett inloggningsstatus
+            loadCameras();
+        });
+        
+        // ===============================================
+        // Kamerafunktioner
+        // ===============================================
+        
+        // Ladda kameror från Firestore
+        async function loadCameras() {
+            try {
+                // Kolla om det finns kameror i databasen
+                const snapshot = await db.collection('cameras').get();
+                
+                // Om det inte finns några kameror, lägg till standardkameror
+                if (snapshot.empty) {
+                    await addDefaultCameras();
+                    return; // loadCameras kommer att kallas igen efter att standardkameror har lagts till
+                }
+                
+                // Visa kameror
+                cameraListElement.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const camera = {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                    
+                    displayCamera(camera);
+                });
+                
+            } catch (error) {
+                console.error('Fel vid laddning av kameror:', error);
+                cameraListElement.innerHTML = '<p>Kunde inte ladda kameror. Fel: ' + error.message + '</p>';
             }
         }
         
-        // Funktion för att lämna tillbaka en kamera
-        function returnCamera(cameraId) {
-            if (confirm('Är du säker på att du vill lämna tillbaka denna kamera?')) {
-                logDebug(`Försöker lämna tillbaka kamera ID: ${cameraId}`);
+        // Lägg till standardkameror i databasen
+        async function addDefaultCameras() {
+            try {
+                const defaultCameras = [
+                    { name: "Canon EOS 5D", description: "Professionell DSLR-kamera med full-frame sensor.", available: true },
+                    { name: "Sony Alpha A7III", description: "Spegellös systemkamera med utmärkt bildkvalitet.", available: true },
+                    { name: "Nikon Z6", description: "Spegellös kamera med bra videofunktionalitet.", available: true },
+                    { name: "Panasonic Lumix GH5", description: "Utmärkt för videoproduktion med 4K-inspelning.", available: true },
+                    { name: "Fujifilm X-T4", description: "Kompakt systemkamera med retrostil och bra bildkvalitet.", available: true },
+                    { name: "Blackmagic Pocket Cinema 6K", description: "Professionell filmkamera med 6K-upplösning.", available: true },
+                    { name: "Canon EOS R5", description: "Högupplöst spegellös kamera med 8K-video.", available: true },
+                    { name: "Sony FX3", description: "Kompakt filmkamera från Sony med full-frame sensor.", available: true },
+                    { name: "GoPro Hero 10", description: "Actionkamera för äventyrlig fotografering.", available: true },
+                    { name: "DJI Pocket 2", description: "Liten kamera med inbyggd gimbal för stabiliserad video.", available: true }
+                ];
                 
-                // Hämta aktuella kameror
-                const cameras = getCameras();
+                console.log('Lägger till standardkameror...');
                 
-                // Hitta kameran och uppdatera dess status
-                const camera = cameras.find(c => c.id === cameraId);
+                // Lägg till varje kamera i Firestore
+                for (const camera of defaultCameras) {
+                    await db.collection('cameras').add(camera);
+                }
                 
-                if (camera && !camera.available) {
-                    logDebug(`Återlämnar kamera: ${camera.name}`);
-                    camera.available = true;
-                    // Ta bort bokningsinformation
-                    delete camera.bookedBy;
-                    delete camera.startDate;
-                    delete camera.endDate;
+                console.log('Standardkameror tillagda');
+                loadCameras(); // Ladda kameror igen efter att de har lagts till
+                
+            } catch (error) {
+                console.error('Fel vid tillägg av standardkameror:', error);
+                alert('Kunde inte lägga till standardkameror: ' + error.message);
+            }
+        }
+        
+        // Visa en kamera i listan
+        function displayCamera(camera) {
+            const cameraElement = document.createElement('div');
+            cameraElement.className = 'camera';
+            
+            let statusHTML = '';
+            let bookingInfoHTML = '';
+            let buttonHTML = '';
+            
+            if (camera.available) {
+                statusHTML = `<p>Status: <span class="available">Tillgänglig</span></p>`;
+                buttonHTML = `<button onclick="openBookingForm('${camera.id}')">Boka kamera</button>`;
+            } else {
+                statusHTML = `<p>Status: <span class="booked">Bokad</span></p>`;
+                
+                if (camera.booking) {
+                    const { userName, startDate, endDate } = camera.booking;
+                    bookingInfoHTML = `
+                        <p>Bokad av: ${userName}</p>
+                        <p>Datum: ${formatDate(startDate)} - ${formatDate(endDate)}</p>
+                    `;
                     
-                    // Spara uppdaterad data
-                    saveCameras(cameras);
-                    
-                    // Uppdatera visningen
-                    displayCameras();
-                    
-                    // Visa bekräftelse
-                    alert(`${camera.name} har nu markerats som tillgänglig`);
+                    // Om användaren är inloggad och det är deras bokning, visa avbokningsknapp
+                    const user = auth.currentUser;
+                    if (user && camera.booking.userId === user.uid) {
+                        buttonHTML = `<button onclick="cancelBooking('${camera.id}')">Avboka</button>`;
+                    } else {
+                        buttonHTML = `<button disabled>Bokad</button>`;
+                    }
                 }
             }
+            
+            cameraElement.innerHTML = `
+                <h3>${camera.name}</h3>
+                ${statusHTML}
+                <p>${camera.description}</p>
+                ${bookingInfoHTML}
+                ${buttonHTML}
+            `;
+            
+            cameraListElement.appendChild(cameraElement);
         }
         
-        // Återställ all data till standardinställningar (för demo)
-        function resetAllData() {
-            if (confirm('Detta kommer att återställa all bokningsdata. Är du säker?')) {
-                logDebug("Återställer all data till standardinställningar");
-                saveCameras(defaultCameras);
-                displayCameras();
-                alert('All data har återställts till standardinställningar.');
-            }
+        // Formatera datum
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getDate()}/${date.getMonth() + 1}`;
         }
-
-        // Initialisera sidan
-        window.onload = function() {
-            logDebug("Sidan laddas, initialiserar...");
+        
+        // ===============================================
+        // Bokningsfunktioner
+        // ===============================================
+        
+        // Öppna bokningsformuläret
+        window.openBookingForm = function(cameraId) {
+            // Kontrollera om användaren är inloggad
+            if (!auth.currentUser) {
+                alert('Du måste vara inloggad för att boka en kamera');
+                return;
+            }
             
-            // Visa kamerorna
-            displayCameras();
+            // Sätt kamera-ID i formuläret
+            cameraIdInput.value = cameraId;
             
-            // Lägg till eventlistener för formuläret
-            document.getElementById('book-camera-form').addEventListener('submit', handleBookFormSubmit);
+            // Visa formuläret
+            bookingFormElement.style.display = 'block';
             
-            logDebug("Initialisering klar");
+            // Sätt dagens datum som standard
+            const today = new Date().toISOString().split('T')[0];
+            startDateInput.value = today;
+            startDateInput.min = today;
+            
+            // Sätt morgondagens datum som standard för slutdatum
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            endDateInput.value = tomorrow.toISOString().split('T')[0];
+            endDateInput.min = today;
+        };
+        
+        // Stäng bokningsformuläret
+        cancelBookingBtn.addEventListener('click', () => {
+            bookingFormElement.style.display = 'none';
+        });
+        
+        // Hantera bokning
+        bookBtn.addEventListener('click', async () => {
+            const cameraId = cameraIdInput.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            
+            // Validera datum
+            if (!startDate || !endDate) {
+                alert('Du måste ange start- och slutdatum');
+                return;
+            }
+            
+            if (new Date(endDate) <= new Date(startDate)) {
+                alert('Slutdatum måste vara efter startdatum');
+                return;
+            }
+            
+            // Kontrollera att användaren är inloggad
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Du måste vara inloggad för att boka');
+                return;
+            }
+            
+            try {
+                // Hämta kameran för att kontrollera att den fortfarande är tillgänglig
+                const cameraDoc = await db.collection('cameras').doc(cameraId).get();
+                
+                if (!cameraDoc.exists) {
+                    alert('Kameran finns inte längre');
+                    return;
+                }
+                
+                const camera = cameraDoc.data();
+                
+                if (!camera.available) {
+                    alert('Kameran är inte längre tillgänglig');
+                    return;
+                }
+                
+                // Uppdatera kameran med bokningsinformation
+                await db.collection('cameras').doc(cameraId).update({
+                    available: false,
+                    booking: {
+                        userId: user.uid,
+                        userName: user.email,
+                        startDate: startDate,
+                        endDate: endDate,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                });
+                
+                alert('Kameran är nu bokad!');
+                bookingFormElement.style.display = 'none';
+                loadCameras(); // Uppdatera listan med kameror
+                
+            } catch (error) {
+                console.error('Fel vid bokning:', error);
+                alert('Kunde inte boka kameran: ' + error.message);
+            }
+        });
+        
+        // Avboka en kamera
+        window.cancelBooking = async function(cameraId) {
+            // Kontrollera att användaren är inloggad
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Du måste vara inloggad för att avboka');
+                return;
+            }
+            
+            if (!confirm('Är du säker på att du vill avboka denna kamera?')) {
+                return;
+            }
+            
+            try {
+                // Hämta kameran för att kontrollera att det är användarens bokning
+                const cameraDoc = await db.collection('cameras').doc(cameraId).get();
+                
+                if (!cameraDoc.exists) {
+                    alert('Kameran finns inte längre');
+                    return;
+                }
+                
+                const camera = cameraDoc.data();
+                
+                if (camera.available || !camera.booking) {
+                    alert('Det finns ingen bokning att avboka');
+                    return;
+                }
+                
+                if (camera.booking.userId !== user.uid) {
+                    alert('Du kan bara avboka dina egna bokningar');
+                    return;
+                }
+                
+                // Uppdatera kameran
+                await db.collection('cameras').doc(cameraId).update({
+                    available: true,
+                    booking: firebase.firestore.FieldValue.delete()
+                });
+                
+                alert('Bokningen har avbokats');
+                loadCameras(); // Uppdatera listan med kameror
+                
+            } catch (error) {
+                console.error('Fel vid avbokning:', error);
+                alert('Kunde inte avboka: ' + error.message);
+            }
         };
     </script>
 </body>
