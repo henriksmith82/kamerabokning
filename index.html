@@ -166,16 +166,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // ===============================================
-        // STEG 1: ERSÄTT DETTA MED DIN FIREBASE-KONFIGURATION
-        // ===============================================
         const firebaseConfig = {
             apiKey: "AIzaSyAY7R1kpTXNwyVp0CjpzyqgLISY8_6JVJk",
             authDomain: "isgyjos-967af.firebaseapp.com",
             projectId: "isgyjos-967af",
             storageBucket: "isgyjos-967af.firebasestorage.app",
             messagingSenderId: "255676199637",
-            appId: "1:255676199637:web:cb35dbb0a28acc7b8ca85c"
+            appId: "1:255676199637:web:cb35dbb0a28acc7b8ca85c",
             measurementId: "G-19RM2ZCD96"
         };
         
@@ -302,7 +299,9 @@
                 
             } catch (error) {
                 console.error('Fel vid laddning av kameror:', error);
-                cameraListElement.innerHTML = '<p>Kunde inte ladda kameror. Fel: ' + error.message + '</p>';
+                var p=document.createElement("p");
+                p.textContent='Kunde inte ladda kameror. Fel: ' + error.message;
+                cameraListElement.appendChild(p);
             }
         }
         
@@ -342,42 +341,52 @@
         function displayCamera(camera) {
             const cameraElement = document.createElement('div');
             cameraElement.className = 'camera';
+
+            cameraElement.innerHTML = "";
+            var h3=document.createElement("h3");
+            h3.textContent=camera.name;
+            cameraElement.appendChild(h3);
             
-            let statusHTML = '';
-            let bookingInfoHTML = '';
-            let buttonHTML = '';
+            var p=document.createElement("p");
+            p.innerHTML="Status: "+camera.available?'<span class="booked">Bokad</span>':'<span class="available">Tillgänglig</span>';
+            cameraElement.appendChild(p);
+            
+            p=document.createElement("p");
+            p.textContent=camera.description;
+            cameraElement.appendChild(p);
             
             if (camera.available) {
-                statusHTML = `<p>Status: <span class="available">Tillgänglig</span></p>`;
-                buttonHTML = `<button onclick="openBookingForm('${camera.id}')">Boka kamera</button>`;
+                var button=document.createElement("button");
+                button.onclick=function(){openBookingForm(camera.id);};
+                button.textContent="Boka kamera";
+                cameraElement.appendChild(button);
             } else {
-                statusHTML = `<p>Status: <span class="booked">Bokad</span></p>`;
-                
                 if (camera.booking) {
-                    const { userName, startDate, endDate } = camera.booking;
-                    bookingInfoHTML = `
-                        <p>Bokad av: ${userName}</p>
-                        <p>Datum: ${formatDate(startDate)} - ${formatDate(endDate)}</p>
-                    `;
+                    const { username, startDate, endDate } = camera.booking;
+
+                    p=document.createElement("p");
+                    p.textContent="Bokad av: "+username;
+                    cameraElement.appendChild(p);
+
+                    p=document.createElement("p");
+                    p.textContent="Datum: "+formatDate(startDate)+" - "+formatDate(endDate);
+                    cameraElement.appendChild(p);
                     
                     // Om användaren är inloggad och det är deras bokning, visa avbokningsknapp
                     const user = auth.currentUser;
                     if (user && camera.booking.userId === user.uid) {
-                        buttonHTML = `<button onclick="cancelBooking('${camera.id}')">Avboka</button>`;
+                        var button=document.createElement("button");
+                        button.onclick=function(){cancelBooking(camera.id);};
+                        button.textContent="Avboka";
+                        cameraElement.appendChild(button);
                     } else {
-                        buttonHTML = `<button disabled>Bokad</button>`;
+                        var button=document.createElement("button");
+                        button.disabled="";
+                        button.textContent="Bokad";
+                        cameraElement.appendChild(button);
                     }
                 }
             }
-            
-            cameraElement.innerHTML = `
-                <h3>${camera.name}</h3>
-                ${statusHTML}
-                <p>${camera.description}</p>
-                ${bookingInfoHTML}
-                ${buttonHTML}
-            `;
-            
             cameraListElement.appendChild(cameraElement);
         }
         
@@ -427,6 +436,13 @@
             const cameraId = cameraIdInput.value;
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
+
+            // Kontrollera att användaren är inloggad
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Du måste vara inloggad för att boka');
+                return;
+            }
             
             // Validera datum
             if (!startDate || !endDate) {
@@ -436,13 +452,6 @@
             
             if (new Date(endDate) <= new Date(startDate)) {
                 alert('Slutdatum måste vara efter startdatum');
-                return;
-            }
-            
-            // Kontrollera att användaren är inloggad
-            const user = auth.currentUser;
-            if (!user) {
-                alert('Du måste vara inloggad för att boka');
                 return;
             }
             
